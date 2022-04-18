@@ -1,0 +1,92 @@
+-- Table: public.car_master
+-- Description: this table is master table for storing car related information
+-- DROP TABLE IF EXISTS public.car_master;
+
+CREATE TABLE IF NOT EXISTS public.car_master
+(
+    car_id character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    name character varying(1000) COLLATE pg_catalog."default",
+    "desc" character varying(2000) COLLATE pg_catalog."default",
+    manufacturer character varying(1000) COLLATE pg_catalog."default",
+    model_no character varying(1000) COLLATE pg_catalog."default",
+    serial_number character varying(100) COLLATE pg_catalog."default",
+    weight smallint,
+    price double precision,
+    created_user character varying(20) COLLATE pg_catalog."default",
+    create_datetime timestamp without time zone DEFAULT now(),
+    updated_user character varying(20) COLLATE pg_catalog."default",
+    update_datetime timestamp without time zone DEFAULT now(),
+    CONSTRAINT car_master_pkey PRIMARY KEY (car_id)
+)
+
+TABLESPACE pg_default;
+
+
+-- Table: public.salesperson_master
+
+-- DROP TABLE IF EXISTS public.salesperson_master;
+
+-- Table: public.salesperson_master
+
+-- DROP TABLE IF EXISTS public.salesperson_master;
+
+CREATE TABLE IF NOT EXISTS public.salesperson_master
+(
+    salesperson_id character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    name character varying(100) COLLATE pg_catalog."default",
+    address character varying(1000) COLLATE pg_catalog."default",
+    phone character varying(100) COLLATE pg_catalog."default",
+    created_user character varying(20) COLLATE pg_catalog."default",
+    create_datetime timestamp without time zone DEFAULT now(),
+    updated_user character varying(20) COLLATE pg_catalog."default",
+    update_datetime timestamp without time zone DEFAULT now(),
+    CONSTRAINT salesperson_master_pkey PRIMARY KEY (salesperson_id),
+    CONSTRAINT salesperson_master_car_id FOREIGN KEY (car_id)
+        REFERENCES public.car_master (car_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+TABLESPACE pg_default;
+
+-- Table: public.customer_master
+
+-- DROP TABLE IF EXISTS public.customer_master;
+
+CREATE TABLE IF NOT EXISTS public.customer_master
+(
+    customer_id character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    customer_name character varying(1000) COLLATE pg_catalog."default" NOT NULL,
+    address character varying(1000) COLLATE pg_catalog."default",
+    phone character varying(100) COLLATE pg_catalog."default",
+    created_user character varying(20) COLLATE pg_catalog."default",
+    create_datetime timestamp without time zone DEFAULT now(),
+    updated_user character varying(20) COLLATE pg_catalog."default",
+    update_datetime timestamp without time zone DEFAULT now(),
+    CONSTRAINT customer_master_pkey PRIMARY KEY (customer_id)
+TABLESPACE pg_default;
+
+-- Table: public.car_order
+
+-- DROP TABLE IF EXISTS public.car_order;
+
+CREATE TABLE IF NOT EXISTS public.car_order
+(
+    order_id character varying COLLATE pg_catalog."default" NOT NULL,
+    car_id character varying COLLATE pg_catalog."default" NOT NULL,
+    customer_id character varying COLLATE pg_catalog."default" NOT NULL,
+    salesperson_id character varying COLLATE pg_catalog."default" NOT NULL,
+    sales_date date,
+    delivery_date date,
+    CONSTRAINT car_order_pkey PRIMARY KEY (order_id),
+    CONSTRAINT car_master FOREIGN KEY (car_id)
+        REFERENCES public.car_master (car_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT customer_master FOREIGN KEY (customer_id)
+        REFERENCES public.customer_master (customer_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+TABLESPACE pg_default;
