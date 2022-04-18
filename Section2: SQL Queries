@@ -1,0 +1,31 @@
+1. I want to know the list of our customers and their spending
+
+select c.customer_id, sum(m.Price) from public.car_order as c
+	 inner join public.car_master as m on c.car_id = m.car_id
+   --where clause to specify time period
+	 group by c.customer_id ;
+
+
+
+
+2.	I want to find out the top 3 car manufacturers that customers bought by sales (quantity) and the sales number for it in the current month.
+
+select manufacturer, c.cnt as "Cars Sold" from car_master m
+(select c.car_id,  count(c.car_id) as cnt  from public.car_order as c
+	where c.sales_date between <startDate> and <End Date>
+	 group by c.car_id 
+   order by cnt desc) c
+   where m.car_id = c.car_id
+   fetch first 3 rows only;
+   
+  Note: This above query is for oracle database, similaryly we can use top for SQL server, Limit for MySQL, 
+
+
+-- the following is the query you can run on free online oracle database(https://livesql.oracle.com) to get top 3 products
+select p.product_name, p.product_id, c.cnt
+from CO.PRODUCTS P, (
+select product_id, count(product_id) as cnt from CO.ORDER_ITEMS
+group by product_id
+order by cnt desc) c
+where c.product_id = P.product_id
+fetch first 3 rows only;
