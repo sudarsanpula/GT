@@ -1,0 +1,61 @@
+#Source Data Source Files: Dataset1.csv, Dataset2.csv File available for processing at 01:00 AM everyday Header column exists in the file Location of the file is neNetwork drive
+
+#File Specifications: Dataset1.csv
+
+
+#File Specifications: Dataset2.csv
+
+
+
+##########Scheduling##############
+
+Schedule the job to load file into Staging tables . 
+
+Code:
+Crontab code: 0 1 * * * (explanation: 0 minute of every day of every month and all weekdays i.e. Sunday to Saturday)
+
+#############Step1:########################
+Loading of data files into Staging table as per the schedule. Note: Staging tables are permanent tables to temporarily store data as it is from data sources. At the time loading into staging tables no data transformation rules are being applied.
+
+--STG_DATASET1- to load dataset1.csv file. 
+
+CREATE TABLE IF NOT EXISTS public."STG_DATASET1" ( "Name" character varying(1000) , price real );
+
+--STG_DATASET2- to load dataset2.csv file. 
+
+CREATE TABLE IF NOT EXISTS public."STG_DATASET2" ( "Name" character varying(1000) , price real )
+
+Step 2: Loading of the data from staging to persistence/historical data store, which could be your EDW, Data Hub, Central Data Store etc or just OLAP system. 
+Note: In this step, we apply data transformations, data standards, data cleansing , substitutions etc.
+
+CREATE TABLE IF NOT EXISTS public."CUST_TRAN" ( full_name character varying(1000), 
+                                                price real, 
+                                                first_name character varying(1000), 
+                                                last_name character varying(1000), 
+                                                above_100 character varying(20), 
+                                                last_upd_datetime timestamp without time zone DEFAULT now() ) 
+
+Loading for Data from Stage tables to Persistent Data Repository(EDW/CDW/Data Hub/Data Store) tables.
+
+Processing tasks: • Split the name field into first_name, and last_name • Remove any zeros prepended to the price field (explicit action is not required, the moment this data is stored or cast into numeric, leading zeros will be disappeared) • Delete any rows which do not have a name(Note: instead of deleting rows in the stage table, I opted to filter out those rows while loading into persistent table). • Create a new field named above_100, which is true if the price is strictly greater than 100
+
+---Data Loading into persistant table 
+insert into public."CUST_TRAN"(full_name,price,first_name, last_name,above_100 ) 
+select "Name",
+pirice, 
+split_part("Name", ' ', 1) AS "firstName", -- Split the name field into first_name 
+split_part("Name", ' ', 2) As "LastName" , -- Split the name field into last_name 
+CASE WHEN price>100 THEN 'true' -- tranformation: when the price is above 100, return true otherwise fase 
+ELSE 'false' 
+END AS above_100 
+from public."STG_DATASET1" where trim("Name") is not null; -- filtering records without value in the name field 
+union all -- set operator: to combine result of 2 queries select 
+-- Data set 2 
+"name", 
+"price"::DOUBLE PRECISION as "price", -- to demonstrate cast functionality I have choosen string datatype to store decimal value 
+split_part("name", ' ', 1) AS "firstName", -- Split the name field into first_name 
+split_part("name", ' ', 2), As "LastName" , -- Split the name field into last_name 
+CASE 
+WHEN "price"::DOUBLE PRECISION>100 THEN 'true' -- tranformation: when the price is above 100, return true otherwise fase 
+ELSE 'false' 
+END AS above_100 from public."STG_DATASET2" where trim("name") is not null -- filtering records without value in the name field
